@@ -34,6 +34,8 @@ This repository contains the solution to the **Receipt Processor Challenge** pro
 
 4. The application will run on `http://localhost:8080`.
 
+5. Visit `http://localhost:8080/swagger/index.html` to launch the swagger documentation 
+
 ---
 
 ### 2. Run Using Docker
