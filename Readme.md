@@ -142,4 +142,3 @@ go test ./...
 - Receipt validation follows the rules provided in the challenge.
 - Time is handled in the `UTC` timezone for consistency.
 ```
- 
