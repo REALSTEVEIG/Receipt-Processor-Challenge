@@ -11,35 +11,39 @@ import (
 )
 
 func TestProcessReceiptHandler(t *testing.T) {
-	payload := `{
-		"retailer": "Target",
-		"purchaseDate": "2022-01-02",
-		"purchaseTime": "13:13",
-		"total": "1.25",
-		"items": [
-			{"shortDescription": "Pepsi - 12-oz", "price": "1.25"}
-		]
-	}`
+    payload := `{
+        "retailer": "Target",
+        "purchaseDate": "2022-01-02",
+        "purchaseTime": "13:13",
+        "total": "1.25",
+        "items": [
+            {"shortDescription": "Pepsi - 12-oz", "price": "1.50"}
+        ]
+    }`
 
-	req, err := http.NewRequest("POST", "/receipts/process", bytes.NewBuffer([]byte(payload)))
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
+    req, err := http.NewRequest("POST", "/receipts/process", bytes.NewBuffer([]byte(payload)))
+    if err != nil {
+        t.Fatalf("Failed to create request: %v", err)
+    }
+    req.Header.Set("Content-Type", "application/json")
 
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(processReceiptHandler)
-	handler.ServeHTTP(rr, req)
+    rr := httptest.NewRecorder()
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("Expected status 200, got %d", rr.Code)
-	}
+    handler := http.HandlerFunc(processReceiptHandler)
+    handler.ServeHTTP(rr, req)
 
-	var resp map[string]string
-	json.Unmarshal(rr.Body.Bytes(), &resp)
-	if _, exists := resp["id"]; !exists {
-		t.Errorf("Response body missing 'id' field: %v", rr.Body.String())
-	}
+    if rr.Code != http.StatusOK {
+        t.Errorf("Expected status 200, got %d", rr.Code)
+    }
+
+    var resp map[string]string
+    err = json.Unmarshal(rr.Body.Bytes(), &resp)
+    if err != nil {
+        t.Fatalf("Failed to parse response: %v", err)
+    }
+    if _, exists := resp["id"]; !exists {
+        t.Errorf("Response body missing 'id' field: %v", rr.Body.String())
+    }
 }
 
 func TestGetPointsHandler(t *testing.T) {
@@ -53,7 +57,7 @@ func TestGetPointsHandler(t *testing.T) {
     }
 
     rr := httptest.NewRecorder()
-    router := mux.NewRouter() // Use the same router setup as in main
+    router := mux.NewRouter()
     router.HandleFunc("/receipts/{id}/points", getPointsHandler).Methods("GET")
     router.ServeHTTP(rr, req)
 
