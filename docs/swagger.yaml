@@ -1,0 +1,82 @@
+definitions:
+  main.Item:
+    properties:
+      price:
+        type: string
+      shortDescription:
+        type: string
+    type: object
+  main.Receipt:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/main.Item'
+        type: array
+      purchaseDate:
+        type: string
+      purchaseTime:
+        type: string
+      retailer:
+        type: string
+      total:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /receipts/{id}/points:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the points awarded for a receipt using its ID.
+      parameters:
+      - description: Receipt ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "404":
+          description: Receipt not found
+          schema:
+            type: string
+      summary: Get receipt points
+      tags:
+      - receipts
+  /receipts/process:
+    post:
+      consumes:
+      - application/json
+      description: Submits a receipt for processing and returns a unique receipt ID.
+      parameters:
+      - description: Receipt to process
+        in: body
+        name: receipt
+        required: true
+        schema:
+          $ref: '#/definitions/main.Receipt'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid receipt
+          schema:
+            type: string
+      summary: Process a receipt
+      tags:
+      - receipts
+swagger: "2.0"

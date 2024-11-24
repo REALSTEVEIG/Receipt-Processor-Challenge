@@ -1,0 +1,95 @@
+openapi: 3.0.3
+info:
+  title: Receipt Processor API
+  description: API for processing receipts and calculating points.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /receipts/process:
+    post:
+      summary: Process a receipt
+      description: Submits a receipt for processing and returns a unique receipt ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Receipt'
+      responses:
+        200:
+          description: A unique ID for the receipt.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: adb6b560-0eef-42bc-9d16-df48f30e89b2
+        400:
+          description: Invalid receipt.
+    get:
+      summary: Get receipt points
+      description: Retrieves the points awarded for a receipt using its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: adb6b560-0eef-42bc-9d16-df48f30e89b2
+      responses:
+        200:
+          description: Points awarded for the receipt.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  points:
+                    type: integer
+                    example: 100
+        404:
+          description: Receipt not found.
+components:
+  schemas:
+    Receipt:
+      type: object
+      required:
+        - retailer
+        - purchaseDate
+        - purchaseTime
+        - items
+        - total
+      properties:
+        retailer:
+          type: string
+          example: Target
+        purchaseDate:
+          type: string
+          format: date
+          example: 2022-01-02
+        purchaseTime:
+          type: string
+          format: time
+          example: 13:13
+        total:
+          type: string
+          example: "1.25"
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+    Item:
+      type: object
+      required:
+        - shortDescription
+        - price
+      properties:
+        shortDescription:
+          type: string
+          example: Pepsi - 12-oz
+        price:
+          type: string
+          example: "1.25"

@@ -11,8 +11,10 @@ import (
 	"strings"
 	"time"
 
+	_ "receipt-processor/docs"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type Receipt struct {
@@ -30,7 +32,15 @@ type Item struct {
 
 var ReceiptStore = map[string]int{}
 
-// POST /receipts/process
+// @Summary Process a receipt
+// @Description Submits a receipt for processing and returns a unique receipt ID.
+// @Tags receipts
+// @Accept  json
+// @Produce  json
+// @Param   receipt body Receipt true "Receipt to process"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Invalid receipt"
+// @Router /receipts/process [post]
 func processReceiptHandler(w http.ResponseWriter, r *http.Request) {
 	var receipt Receipt
 	if err := json.NewDecoder(r.Body).Decode(&receipt); err != nil {
@@ -52,7 +62,15 @@ func processReceiptHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// GET /receipts/{id}/points
+// @Summary Get receipt points
+// @Description Retrieves the points awarded for a receipt using its ID.
+// @Tags receipts
+// @Accept  json
+// @Produce  json
+// @Param   id path string true "Receipt ID"
+// @Success 200 {object} map[string]int
+// @Failure 404 {string} string "Receipt not found"
+// @Router /receipts/{id}/points [get]
 func getPointsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -68,13 +86,11 @@ func getPointsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// validateReceipt validates the receipt fields
 func validateReceipt(receipt Receipt) error {
 	if receipt.Retailer == "" || receipt.PurchaseDate == "" || receipt.PurchaseTime == "" || receipt.Total == "" || len(receipt.Items) == 0 {
 		return errors.New("missing required fields in receipt")
 	}
 
-	// Validate date and time
 	if _, err := time.Parse("2006-01-02", receipt.PurchaseDate); err != nil {
 		return errors.New("invalid purchaseDate format")
 	}
@@ -82,12 +98,10 @@ func validateReceipt(receipt Receipt) error {
 		return errors.New("invalid purchaseTime format")
 	}
 
-	// Validate total
 	if _, err := strconv.ParseFloat(receipt.Total, 64); err != nil {
 		return errors.New("invalid total format")
 	}
 
-	// Validate items
 	for _, item := range receipt.Items {
 		if item.ShortDescription == "" || item.Price == "" {
 			return errors.New("invalid item in receipt")
@@ -100,29 +114,22 @@ func validateReceipt(receipt Receipt) error {
 	return nil
 }
 
-// calculatePoints calculates points based on the receipt rules
 func calculatePoints(receipt Receipt) int {
 	points := 0
 
-	// Rule 1: One point for every alphanumeric character in the retailer name
 	alnum := regexp.MustCompile(`[a-zA-Z0-9]`)
 	points += len(alnum.FindAllString(receipt.Retailer, -1))
 
-	// Rule 2: 50 points if total is a round dollar amount
 	total, _ := strconv.ParseFloat(receipt.Total, 64)
 	if total == math.Floor(total) {
 		points += 50
 	}
-
-	// Rule 3: 25 points if total is a multiple of 0.25
 	if math.Mod(total, 0.25) == 0 {
 		points += 25
 	}
 
-	// Rule 4: 5 points for every two items
 	points += (len(receipt.Items) / 2) * 5
 
-	// Rule 5: Points for item descriptions
 	for _, item := range receipt.Items {
 		desc := strings.TrimSpace(item.ShortDescription)
 		if len(desc)%3 == 0 {
@@ -131,13 +138,11 @@ func calculatePoints(receipt Receipt) int {
 		}
 	}
 
-	// Rule 6: 6 points if the day is odd
 	date, _ := time.Parse("2006-01-02", receipt.PurchaseDate)
 	if date.Day()%2 == 1 {
 		points += 6
 	}
 
-	// Rule 7: 10 points if the time is between 2:00pm and 4:00pm
 	purchaseTime, _ := time.Parse("15:04", receipt.PurchaseTime)
 	if purchaseTime.Hour() == 14 {
 		points += 10
@@ -148,8 +153,11 @@ func calculatePoints(receipt Receipt) int {
 
 func main() {
 	r := mux.NewRouter()
+
 	r.HandleFunc("/receipts/process", processReceiptHandler).Methods("POST")
 	r.HandleFunc("/receipts/{id}/points", getPointsHandler).Methods("GET")
+
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	fmt.Println("Server running on port 8080")
 	http.ListenAndServe(":8080", r)
