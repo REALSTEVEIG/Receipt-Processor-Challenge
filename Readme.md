@@ -1,4 +1,3 @@
-```markdown
 # Receipt Processor Challenge
 
 This repository contains the solution to the **Receipt Processor Challenge** provided by Fetch Rewards. The application processes receipts and calculates points based on predefined rules.
@@ -22,7 +21,6 @@ This repository contains the solution to the **Receipt Processor Challenge** pro
    ```bash
    git clone https://github.com/your-username/receipt-processor-challenge.git
    cd receipt-processor-challenge
-   ```
 
 2. Install dependencies:
    ```bash
