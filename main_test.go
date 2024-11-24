@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gorilla/mux"
 )
 
 func TestProcessReceiptHandler(t *testing.T) {
@@ -41,28 +43,29 @@ func TestProcessReceiptHandler(t *testing.T) {
 }
 
 func TestGetPointsHandler(t *testing.T) {
-	id := "test-id"
-	points := 100
-	ReceiptStore[id] = points
+    ReceiptStore = map[string]int{
+        "test-id": 100,
+    }
 
-	req, err := http.NewRequest("GET", "/receipts/"+id+"/points", nil)
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
-	}
+    req, err := http.NewRequest("GET", "/receipts/test-id/points", nil)
+    if err != nil {
+        t.Fatalf("Failed to create request: %v", err)
+    }
 
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getPointsHandler)
-	handler.ServeHTTP(rr, req)
+    rr := httptest.NewRecorder()
+    router := mux.NewRouter() // Use the same router setup as in main
+    router.HandleFunc("/receipts/{id}/points", getPointsHandler).Methods("GET")
+    router.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("Expected status 200, got %d", rr.Code)
-	}
+    if rr.Code != http.StatusOK {
+        t.Errorf("Expected status 200, got %d", rr.Code)
+    }
 
-	var resp map[string]int
-	json.Unmarshal(rr.Body.Bytes(), &resp)
-	if resp["points"] != points {
-		t.Errorf("Expected points %d, got %d", points, resp["points"])
-	}
+    var resp map[string]int
+    json.Unmarshal(rr.Body.Bytes(), &resp)
+    if resp["points"] != 100 {
+        t.Errorf("Expected points 100, got %d", resp["points"])
+    }
 }
 
 func TestInvalidReceiptPayload(t *testing.T) {
