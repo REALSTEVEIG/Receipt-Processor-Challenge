@@ -50,6 +50,8 @@ This repository contains the solution to the **Receipt Processor Challenge** pro
 
 3. The application will run on `http://localhost:8080`.
 
+4. Visit `http://localhost:8080/swagger/index.html` to launch the swagger documentation 
+
 ---
 
 ## API Endpoints
